@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: facewatch-backend
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend:/app
+      - facewatch-uploads:/app/uploads
+      - facewatch-data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///./data/facewatch.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: facewatch-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8001
+    restart: unless-stopped
+
+volumes:
+  facewatch-uploads:
+  facewatch-data:
