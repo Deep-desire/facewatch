@@ -21,8 +21,9 @@ ANGLE_LABELS = ["front", "left", "right", "slight_left", "slight_right", "up", "
 
 def generate_face_id(db: Session) -> str:
     """Generate a unique, sequential face ID like FW-000001."""
-    count = db.query(Employee).count()
-    return f"FW-{(count + 1):06d}"
+    last_emp = db.query(Employee).order_by(Employee.id.desc()).first()
+    next_id = (last_emp.id + 1) if last_emp else 1
+    return f"FW-{next_id:06d}"
 
 
 def get_known_encodings(db: Session):
@@ -178,3 +179,38 @@ def _recompute_encoding(db: Session, emp: Employee):
     else:
         emp.face_encoding = None
     db.commit()
+
+
+def force_reencode_employee(db: Session, employee_id: int) -> Optional[dict]:
+    """Force rebuild face embedding from all employee photos."""
+    emp = db.query(Employee).filter(Employee.id == employee_id).first()
+    if not emp:
+        return None
+    _recompute_encoding(db, emp)
+    db.refresh(emp)
+    valid_photo_paths = [p.file_path for p in emp.photos if os.path.exists(p.file_path)]
+    return {
+        "employee_id": emp.id,
+        "face_id": emp.face_id,
+        "name": f"{emp.first_name} {emp.last_name}",
+        "photos_used": len(valid_photo_paths),
+        "encoding_available": bool(emp.face_encoding),
+    }
+
+
+def force_reencode_all_employees(db: Session) -> dict:
+    """Force rebuild embeddings for all active employees."""
+    employees = db.query(Employee).filter(Employee.is_active == True).all()
+    results = []
+    success_count = 0
+    for emp in employees:
+        summary = force_reencode_employee(db, emp.id)
+        if summary:
+            if summary["encoding_available"]:
+                success_count += 1
+            results.append(summary)
+    return {
+        "total_employees": len(employees),
+        "successful_encodings": success_count,
+        "results": results,
+    }

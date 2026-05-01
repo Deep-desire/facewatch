@@ -687,6 +687,11 @@ tr:last-child td { border-bottom: none; }
   grid-template-columns: 1fr;
 }
 
+.page.page-live-focus {
+  max-width: none;
+  padding-right: 16px;
+}
+
 .live-camera-clickable {
   cursor: zoom-in;
 }
@@ -708,15 +713,17 @@ tr:last-child td { border-bottom: none; }
 .live-camera-media {
   position: relative;
   background: #000;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: auto;
   min-height: 260px;
-  max-height: min(52vh, 460px);
+  height: clamp(300px, 52vh, 620px);
   overflow: hidden;
 }
 
 .live-grid-focus .live-camera-media {
-  min-height: 560px;
-  max-height: 84vh;
+  min-height: 680px;
+  height: calc(100vh - 250px);
+  max-height: 88vh;
+  aspect-ratio: auto;
 }
 
 .live-feed-canvas {
@@ -724,7 +731,13 @@ tr:last-child td { border-bottom: none; }
   height: 100%;
   background: #000;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center center;
+  image-rendering: auto;
+}
+
+.live-grid-focus .live-feed-canvas {
+  object-fit: contain;
 }
 
 .live-detections {

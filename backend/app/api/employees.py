@@ -135,3 +135,20 @@ def delete_photo(employee_id: int, photo_id: int, db: Session = Depends(get_db))
     success = employee_service.delete_employee_photo(db, photo_id)
     if not success:
         raise HTTPException(status_code=404, detail="Photo not found")
+
+
+@router.post("/{employee_id}/reencode")
+def reencode_employee(employee_id: int, db: Session = Depends(get_db)):
+    """Force rebuild embedding for one employee from saved photos."""
+    result = employee_service.force_reencode_employee(db, employee_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return result
+
+
+@router.post("/reencode-all")
+def reencode_all_employees(db: Session = Depends(get_db)):
+    """Force rebuild embeddings for all active employees."""
+    return employee_service.force_reencode_all_employees(db)
+
+

@@ -13,6 +13,7 @@ function LiveCameraFeed({ camera }) {
   const [detections, setDetections] = useState([]);
   const [status, setStatus] = useState('connecting');
   const [fps, setFps] = useState(0);
+  const [peopleCount, setPeopleCount] = useState(0);
   const frameCountRef = useRef(0);
   const fpsIntervalRef = useRef(null);
 
@@ -55,6 +56,7 @@ function LiveCameraFeed({ camera }) {
         detectionsSigRef.current = nextSig;
         setDetections(nextDetections);
       }
+      setPeopleCount(Number.isFinite(data.people_count) ? data.people_count : 0);
     };
 
     ws.onclose = () => {
@@ -105,6 +107,7 @@ function LiveCameraFeed({ camera }) {
             ● {status}
           </span>
           {status === 'live' && <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>{fps} FPS</span>}
+          {status === 'live' && <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>People: {peopleCount}</span>}
           {status === 'live' || status === 'connecting'
             ? <button onClick={disconnect} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: 4, padding: '2px 8px', fontSize: 10, cursor: 'pointer' }}>Stop</button>
             : <button onClick={connect} style={{ background: 'none', border: '1px solid var(--accent)', color: 'var(--accent)', borderRadius: 4, padding: '2px 8px', fontSize: 10, cursor: 'pointer' }}>Connect</button>
@@ -190,7 +193,7 @@ export default function LiveFeed() {
   const visible = activeCameras.filter(c => selected.includes(c.id));
 
   return (
-    <div className="page">
+    <div className={`page ${focusedCamera ? 'page-live-focus' : ''}`}>
       <div className="page-header">
         <div>
           <h1 className="page-title">Live Feed</h1>
